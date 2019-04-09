@@ -164,8 +164,8 @@ fig.savefig('10km/accessibility-hex-pharm-pr.png', dpi=200, bbox_inches='tight')
 
 
 """
-Below is useful if I put pharmacies, urgent care, and hospitals into one csv file.
-If I do this, need to change the amenity types specified in Configure Script code block (line 28).
+All code below is only useful if I put pharmacies, urgent care, and hospitals into one csv file.
+If I do this, need to change the amenity types specified in Configure Script code block (line 12).
 """
 #%% 5. Calculate and plot accessibility separately for each amenity type
 # The amenity types specified at the beginning area: restaurants, bars, and schools
