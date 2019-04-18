@@ -1,13 +1,12 @@
 """
 Errors log
 
-I have points of origin (origin_test) which are in lat/long format in a csv file.
+I have points of origin (origin_test) which are in x,y format in a csv file.
 I want to add these origin points as new nodes to my Puerto Rico road network, created through Pandana:
     https://github.com/gracedoherty/accessibility/blob/master/pandana_puertorico.py
 """
 
-In [31]: origin_test = pd.read_csv('wpop_arec.csv')
-origin_test.head()
+In [31]: origin_test.head()
 Out[31]: 
        wpop  xmid xxmunicipi  xxcsi_mig0  ...  xwpopm  adj_pop          X          Y
 0  1.278938     6    Arecibo    88019.09  ...   95583      NaN -66.636840  18.493133
