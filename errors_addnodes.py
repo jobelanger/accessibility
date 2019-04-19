@@ -3,7 +3,7 @@ Errors log
 
 I have points of origin (origin_test) which are in x,y format in a csv file.
 I want to add these origin points as new nodes to my Puerto Rico road network, created through Pandana:
-    https://github.com/gracedoherty/accessibility/blob/master/pandana_puertorico.py
+    https://github.com/gracedoherty/accessibility/blob/master/access_puertorico.py
 """
 
 In [31]: origin_test.head()
