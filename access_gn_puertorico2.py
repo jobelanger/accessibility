@@ -306,10 +306,6 @@ inOsnap['drivetimeG'] = 0
 inOsnap['drivetimeP'] = 0
 inOsnap['drivetimeE'] = 0
 
-inOsnapuhead = inOsnapunique.iloc[:51]
-inOsnapuhead = inOsnapuhead.copy()
-inOsnapuhead['drivetimeH'] = 0
-
 
 for i in range(0, len(inOsnapunique)):
     try:
@@ -324,73 +320,17 @@ for i in range(0, len(inOsnapunique)):
         print('Analysis complete')
 # Started sometime around 7:20 or later. 18,000 trips complete by 7:40. Estimated at 2.5 hours runtime.
 # This only worked for the first 5 rows...
-
-for i in range(0, len(inOsnapdfunique2)):
-    try:
-        origin = inOsnapdfunique2.NN.loc[i]
-        destination = inHsnapdfunique.NN.loc[i] 
-        inOsnapdfunique2['drivetimeH'].loc[i] = nx.shortest_path_length(gDriveTime, source=origin, target=destination, weight='time')
-    except:
-        inOsnapdfunique2['drivetimeH'].loc[i] = None
-    if i % 100 == 0 and i != 0:
-        print('%d trips done' % i)
-    elif i == len(inOsnapdfunique2):
-        print('Analysis complete')
-# Started at 10:43pm. Estimated 1.5 hours runtime.
-# head: Usual code stopped after first row. Exception: pass stopped after 5th row.
-# Full both datasets: entered everything after ~75 as nan.
-# Started inOsnapdfunique at 7:40. Again gave 5 rows before 1 nan and then zeros.
-# June 1: Ran 11:09am. Same issues.
-
-for i in range(0, len(inOsnapunique)):
-    try:
-        origin = inOsnapunique.NN.loc[i]
-        destination = inGsnapunique.NN.loc[i] 
-        inOsnapunique['drivetimeG'].loc[i] = nx.shortest_path_length(gDriveTime, source=origin, target=destination, weight='time')
-    except:
-        inOsnapunique['drivetimeG'].loc[i] = None
-    if i % 100 == 0 and i != 0:
-        print('%d trips done' % i)
-    elif i == len(inOsnapunique):
-        print('Analysis complete')
-        
-for i in range(0, len(inOsnapunique)):
-    try:
-        origin = inOsnapunique.NN.loc[i]
-        destination = inPsnapunique.NN.loc[i] 
-        inOsnapunique['drivetimeP'].loc[i] = nx.shortest_path_length(gDriveTime, source=origin, target=destination, weight='time')
-    except:
-        inOsnapunique['drivetimeP'].loc[i] = None
-    if i % 100 == 0 and i != 0:
-        print('%d trips done' % i)
-    elif i == len(inOsnapunique):
-        print('Analysis complete')
-        
-for i in range(0, len(inOsnapunique)):
-    try:
-        origin = inOsnapunique.NN.loc[i]
-        destination = inEsnapunique.NN.loc[i] 
-        inOsnapunique['drivetimeE'].loc[i] = nx.shortest_path_length(gDriveTime, source=origin, target=destination, weight='time')
-    except:
-        inOsnapunique['drivetimeE'].loc[i] = None
-    if i % 100 == 0 and i != 0:
-        print('%d trips done' % i)
-    elif i == len(inOsnapunique):
-        print('Analysis complete')
+# Trying variations on except clause. Usual code stopped after first row. Exception: pass stopped after 5th row.
 
 inOsnapunique.to_csv(os.path.join(pth, 'access_drivetime_sec_nn.csv'))
 
 # Convert from seconds to minutes
 out = inOsnapunique.copy()
 out['drivetimeD'] = out['drivetimeD'] / 60
-out['drivetimeH'] = out['drivetimeH'] / 60
-out['drivetimeG'] = out['drivetimeG'] / 60
-out['drivetimeP'] = out['drivetimeP'] / 60
-out['drivetimeE'] = out['drivetimeE'] / 60
 out.to_csv(os.path.join(pth, 'access_drivetime_nn.csv'))
 
 
-#%% Using calculate_OD
+#%% Using gn.calculate_OD instead of nx.shortest_path_length
 fail_value = 999999999
 accDriveTime = gn.calculate_OD(gDriveTime, list(inOsnapdfunique2.NN), list(inHsnapunique.NN), fail_value, weight = 'time')
 accDriveMin = accDriveTime[accDriveTime < fail_value] / 60
@@ -401,4 +341,5 @@ accDriveMin_df = pd.DataFrame(accDriveMin)
 
 accDriveTime2 = pd.DataFrame
 
+# I understand making the OD matrix but can't find a way to assign the drive times back onto the nodes.
 
