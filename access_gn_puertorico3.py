@@ -258,7 +258,7 @@ len(dests)
 # calculate_OD TypeError: 'set' object does not support indexing. Made the set a list and it worked.
 
 
-accDriveTime = gn.calculate_OD(gDriveTime, origins, listP, fail_value, weight = 'time')
+accDriveTime = gn.calculate_OD(gDriveTime, origins, dests, fail_value, weight = 'time')
 # Full 5 variable list (destslist) started sometime around 1pm. Finished at 2:45pm.
 
 # Since memory error was happening with saving accDriveTime (on June 3), need to re-do calculate_OD. 
@@ -266,15 +266,15 @@ accDriveTime = gn.calculate_OD(gDriveTime, origins, listP, fail_value, weight = 
 accDriveTimeP = gn.calculate_OD(gDriveTime, origins, listP, fail_value, weight = 'time')
 accDriveTimeE = gn.calculate_OD(gDriveTime, origins, listE, fail_value, weight = 'time')
 # Pharmacies started at 10:06am, ended 10:39am
-# Education started 1:05pm
+# Education started 1:05pm, ended before 2pm.
 
 #%% Convert to minutes and save to file.
-#accDriveTimedf = pd.DataFrame(accDriveTime, index = origins, columns = dests)
-#accDriveTimedf.head(5)
-#accDriveTimedf.to_csv(os.path.join(pth, 'accDriveTime.csv'))
-## Attempted to write to csv. Errno28 no space left on device.
-#accDriveMin = accDriveTimedf[accDriveTimedf <fail_value] / 60
-## Memory Error.
+accDriveTimedf = pd.DataFrame(accDriveTime, index = origins, columns = dests)
+accDriveTimedf.head(5)
+accDriveTimedf.to_csv(os.path.join(pth, 'accDriveTime.csv'))
+# Attempted to write to csv. Errno28 no space left on device.
+accDriveMin = accDriveTimedf[accDriveTimedf <fail_value] / 60
+# Memory Error.
 
 # Create POI-specific OD and save to file.
 accDriveTimeD = accDriveTimedf.loc[:, listD]
@@ -287,7 +287,7 @@ accDriveTimeG.to_csv(os.path.join(pth, 'accDriveTimeG.csv'))
 accPdf = pd.DataFrame(accDriveTimeP, index = origins, columns = listP)
 accPdf.to_csv(os.path.join(pth, 'accDriveTimeP.csv')) # Started 10:40am, completed successfully 10:44am.
 accEdf = pd.DataFrame(accDriveTimeE, index = origins, columns = listE)
-accEdf.to_csv(os.path.join(pth, 'accDriveTimeE.csv')) # Waiting for final workflow before completing.
+accEdf.to_csv(os.path.join(pth, 'accDriveTimeE.csv')) # Successful.
 # If memory error continues, then halve the accXdf datasets first.
 
 
@@ -299,8 +299,9 @@ accHmin.to_csv(os.path.join(pth, 'accHmin.csv'))
 accGmin = accDriveTimeG[accDriveTimeG < fail_value] / 60
 accGmin.to_csv(os.path.join(pth, 'accGmin.csv'))
 # Waiting to resolve memory error above before doing P and E.
-accPmin = accPdf[accPdf <fail_value] / 60
-accPmin.to_csv(os.path.join(pth, 'accPmin.csv'))
+# Resolved.
+accPmin = accPdf[accPdf <fail_value] / 60 
+accPmin.to_csv(os.path.join(pth, 'accPmin.csv')) # Started 2:31pm. Done by 2:38pm.
 accEmin = accEdf[accEdf <fail_value] / 60
 accEmin.to_csv(os.path.join(pth, 'accEmin.csv'))
 
@@ -312,27 +313,15 @@ accHmin = os.path.join(gostNetsFolder, "SampleData", "accHmin.csv")
 accHmin = pd.read_csv(accHmin)
 accGmin = os.path.join(gostNetsFolder, "SampleData", "accGmin.csv")
 accGmin = pd.read_csv(accGmin)
+accPmin = os.path.join(gostNetsFolder, "SampleData", "accPmin.csv")
+accPmin = pd.read_csv(accPmin)
+accEmin = os.path.join(gostNetsFolder, "SampleData", "accEmin.csv")
+accEmin = pd.read_csv(accEmin)
+accGmin.head(10)
+accPmin.head(10)
 
 
 #%%
-"""
-Next steps: 
-    1. DONE. create a walking time field for origins using dist_to_node / 4.5 kph
-    2. DONE. add the NN time value to walking time field
-    3. investigate adding walking time field for destinations (when in the workflow it should be added)
-        I don't think this should be, considering how close the origin points were to the road network.
-    4. create pop-weighted average municipal scores from origins walking time field
-    5. elevation impedance
-
-"""
-
-#%%
-# Calculate walk time from WorldPop origin to nearest node.
-inOsnap.head(10)
-inOsnap["walktime"] = 0
-inOsnap["walktime"] = inOsnap["NN_dist"] / 75 # Walking at 75 meters per minute (4.5 km per hour)
-inOsnap = inOsnap.drop(columns="mmtimeD")
-
 # Find first nearest POI for each origin node.
 accDmin["1D"] = 0
 accDsubset = accDmin.iloc[:,1:44]
@@ -340,31 +329,115 @@ accDmin["1D"] = accDsubset.min(axis=1) # Default is axis=0, meaning min value of
 accDmin.head(1)
 accDmin.rename(columns={'Unnamed: 0': 'NN'}, inplace=True)
 accDmin2 = accDmin.loc[:,['NN', '1D']] # Remove unnecessary OD values.
+accDmin2.to_csv(os.path.join(pth, 'accD.csv'))
+
+accHsub = accHmin.iloc[:, 1:70] # Avoid selection of NN ID as the minimum time.
+accHmin["1H"] = 0
+accHmin["1H"] = accHsub.min(axis=1)
+accHmin.head(1)
+accHmin.rename(columns={'Unnamed: 0': 'NN'}, inplace=True)
+accH = accHmin.loc[:,['NN', '1H']] # Remove unnecessary OD values.
+accH.to_csv(os.path.join(pth, 'accH.csv'))
+
+
+accGsub = accGmin.iloc[:, 1:317] # Avoid selection of NN ID as the minimum time.
+accGmin["1G"] = 0
+accGmin["1G"] = accGsub.min(axis=1)
+accGmin.head(1)
+accGmin.rename(columns={'Unnamed: 0': 'NN'}, inplace=True)
+accG = accGmin.loc[:,['NN', '1G']] # Remove unnecessary OD values.
+accG.to_csv(os.path.join(pth, 'accG.csv'))
+
+
+accPsub = accPmin.iloc[:, 1:927] # Avoid selection of NN ID as the minimum time.
+accPmin["1P"] = 0
+accP1half = accPmin.iloc[:70000, :]
+accP1halfsub = accPsub.iloc[:70000, :]
+accP1half["1P"] = accP1halfsub.min(axis=1)
+
+accPmin.rename(columns={'Unnamed: 0': 'NN'}, inplace=True)
+accP = accPmin.loc[:,['NN', '1P']] # Remove unnecessary OD values.
+
+
+
+
+accEsub = accEmin.iloc[:, 1:1427] # Avoid selection of NN ID as the minimum time.
+accEmin["1E"] = 0
+accEmin["1E"] = accEsub.min(axis=1)
+accEmin.head(1)
+accEmin.rename(columns={'Unnamed: 0': 'NN'}, inplace=True)
+accE = accEmin.loc[:,['NN', '1E']] # Remove unnecessary OD values.
+accEsub.head(1)
 
 # Find the second closest dialysis center.
 # Still developing this code.
-accDmin["2D"] = 0
-accDsubset2 = accDmin.iloc[:,1:44]
-smallestD = accDsubset2.min(axis=1)
-for i, c in range(0, len(accDsubset2)):
-    if i is accDsubset2[c].min()
-        i == 0
-accDsubset2.head()
-accDmin["2D"] = accDsubset2.min(axis=1)
+#accDmin["2D"] = 0
+#accDsubset2 = accDmin.iloc[:,1:44]
+#smallestD = accDsubset2.min(axis=1)
+#for i, c in range(0, len(accDsubset2)):
+#    if i is accDsubset2[c].min()
+#        i == 0
+#accDsubset2.head()
+#accDmin["2D"] = accDsubset2.min(axis=1)
 
 
+#%% Load from disk
+accD = os.path.join(gostNetsFolder, "SampleData", "accD.csv")
+accD = pd.read_csv(accD)
+accH = os.path.join(gostNetsFolder, "SampleData", "accH.csv")
+accH = pd.read_csv(accH)
+accG = os.path.join(gostNetsFolder, "SampleData", "accG.csv")
+accG = pd.read_csv(accG)
+accP = os.path.join(gostNetsFolder, "SampleData", "accP.csv")
+accP = pd.read_csv(accP)
+accE = os.path.join(gostNetsFolder, "SampleData", "accE.csv")
+accE = pd.read_csv(accE)
+accG.head(10)
+accP.head(10)
+accE.head(10)
 
-inOsnap2 = inOsnap.merge(accDmin2, how='left', left_on='NN', right_on='NN', sort=False)
-inOsnap2.head(3)
 
-inOsnap2["mmtimeD"] = 0
-for node in range(0, len(inOsnap2)):
-    inOsnap2["mmtimeD"] = inOsnap2["walktime"] + inOsnap2["1D"]
-    if node % 100 == 0 and node != 0:
-        print('%d trips done' % node)
-    elif node == len(inOsnap2):
-        print('Analysis complete')
-# This worked. Clean up dataset before running.
-inOsnap2.head(2)
+# Merge nearest POIs and walktimes
+inOsnapD = inOsnap.merge(accD, how='left', left_on='NN', right_on='NN', sort=False)
+inOsnapD.head(3)
+inOsnapDH = inOsnapD.merge(accH, how='left', left_on='NN', right_on='NN', sort=False)
+inOsnapDH.head(3)
+inOsnapDHG = inOsnapDH.merge(accG, how='left', left_on='NN', right_on='NN', sort=False)
+inOsnapDHG.head(3)
 
+# Calculate walk time from WorldPop origin to nearest node.
+inOsnapDHG.head(10)
+inOsnapDHG["walktime"] = 0
+inOsnapDHG["walktime"] = inOsnapDHG["NN_dist"] / 75 # Walking at 75 meters per minute (4.5 km per hour)
+# Walk times range from only 0-16 seconds. 
+
+# Since walk times to the nearest road are so short, this calculation isn't necessary.
+#list(inOsnapDHG)
+#inOsnapDHG["mmtimeD"] = 0
+#inOsnapDHG["mmtimeH"] = 0
+#inOsnapDHG["mmtimeG"] = 0
+#for node in range(0, len(inOsnapDHG)):
+#    inOsnapDHG["mmtimeD"] = inOsnapDHG["walktime"] + inOsnapDHG["1D"]
+#    inOsnapDHG["mmtimeH"] = inOsnapDHG["walktime"] + inOsnapDHG["1H"]
+#    inOsnapDHG["mmtimeG"] = inOsnapDHG["walktime"] + inOsnapDHG["1G"]    
+#    if node % 300 == 0 and node != 0:
+#        print('%d trips done' % node)
+#    elif node == len(inOsnapDHG):
+#        print('Analysis complete')
+# Started at 4:42pm. Runs about 240 calculations per minute. Estimated completion: 225 hours??
+# Cut it short due to ineffectual influence on municipal ratings.
+inOsnapDHG.head(2)
+
+
+#%%
+"""
+Next steps: 
+    1. try operating & saving & subsetting the calculate_OD with as few variables loaded as possible
+        i. does this solve the weird short distance issue with pharmacies and education?
+    2. figure out the short distance issue with pharmacies and education.
+    4. DONE. create pop-weighted average municipal scores from drive time.
+    6. prepare data for statistical modeling.
+    5. elevation impedance
+
+"""
 
